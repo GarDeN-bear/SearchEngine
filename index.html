@@ -3,17 +3,19 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Поиск</title>
+    <meta name="author" content="GarDeNBear">
+    <meta name="description" content="Search engine">
+    <meta name="keywords" content="search, engine, crowler, html, css, js, cpp, sql">
+    <title>Moogle</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" href="img/MyIcon.ico" type="image/x-icon">
 </head>
 
 <body>
-    <h1>Поиск</h1>
+    <div id="myHeader" for="searchQuery">Moogle</div><br>
     <form action="/search" method="post">
-        <label for="searchQuery">Введите поисковый запрос:</label>
-        <input type="text" id="searchQuery" name="searchQuery">
-        <button type="submit">Искать</button>
+        <input type="text" id="searchQuery" name="searchQuery" maxlength="20">
+        <button id="searchQueryButton" type="submit">Search</button>
     </form>
 </body>
 
