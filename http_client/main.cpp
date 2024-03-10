@@ -27,7 +27,8 @@ void threadPoolWorker() {
     }
   }
 }
-void parseLink(const Link &link, int depth) {
+
+void parseLink(const httputils::Link &link, int depth) {
   try {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -47,9 +48,9 @@ void parseLink(const Link &link, int depth) {
     // TODO: Collect more links from HTML code and add them to the parser like
     // that:
 
-    std::vector<Link> links = {
-        {ProtocolType::HTTPS, "en.wikipedia.org", "/wiki/Wikipedia"},
-        {ProtocolType::HTTPS, "wikimediafoundation.org", "/"},
+    std::vector<httputils::Link> links = {
+        {httputils::ProtocolType::HTTPS, "en.wikipedia.org", "/wiki/Wikipedia"},
+        {httputils::ProtocolType::HTTPS, "wikimediafoundation.org", "/"},
     };
 
     if (depth > 0) {
@@ -76,7 +77,8 @@ int main() {
       threadPool.emplace_back(threadPoolWorker);
     }
 
-    Link link{ProtocolType::HTTPS, "en.wikipedia.org", "/wiki/Main_Page"};
+    httputils::Link link{httputils::ProtocolType::HTTPS, "en.wikipedia.org",
+                         "/wiki/Main_Page"};
 
     {
       std::lock_guard<std::mutex> lock(mtx);

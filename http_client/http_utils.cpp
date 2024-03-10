@@ -12,6 +12,8 @@
 #include <boost/beast/version.hpp>
 #include <openssl/ssl.h>
 
+namespace httputils {
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
@@ -35,6 +37,7 @@ bool isText(const boost::beast::multi_buffer::const_buffers_type &b) {
 std::string getHtmlContent(const Link &link) {
 
   std::string result;
+  std::cout << "getHtmlContent" << std::endl;
 
   try {
     std::string host = link.hostName;
@@ -129,3 +132,5 @@ std::string getHtmlContent(const Link &link) {
 
   return result;
 }
+
+} // namespace httputils
