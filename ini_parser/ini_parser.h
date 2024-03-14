@@ -1,11 +1,11 @@
 #pragma once
+
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
-
 
 class IniParser {
 public:
