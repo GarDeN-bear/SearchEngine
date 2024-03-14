@@ -21,6 +21,7 @@ class HttpConnection : public std::enable_shared_from_this<HttpConnection> {
 public:
   /**
    * @brief Конструктор.
+   * @param socket TCP-сокет.
    */
   HttpConnection(tcp::socket socket);
 

@@ -5,6 +5,7 @@
 #include <thread>
 #include <vector>
 
+#include "../html_parser/html_parser.h"
 #include "../ini_parser/ini_parser.h"
 #include "http_utils.h"
 #include <functional>
@@ -49,11 +50,12 @@ void parseLink(const httputils::Link &link, int depth) {
       std::cout << "Failed to get HTML Content" << std::endl;
       return;
     }
-
+    HtmlParser htmlParser;
+    htmlParser.setHtml(html);
     // TODO: Parse HTML code here on your own
 
     std::cout << "html content:" << std::endl;
-    std::cout << html << std::endl;
+    std::cout << htmlParser.getHandledHtml() << std::endl;
 
     // TODO: Collect more links from HTML code and add them to the parser like
     // that:

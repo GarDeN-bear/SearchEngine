@@ -15,6 +15,7 @@ target_link_libraries(HttpClientApp PUBLIC
 	pqxx
 	OpenSSL::SSL
 	${Boost_LIBRARIES}
+	html_parser
 )
 
 
