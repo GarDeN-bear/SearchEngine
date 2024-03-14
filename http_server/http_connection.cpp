@@ -11,6 +11,9 @@ namespace httpsrvr {
 
 namespace {
 
+const std::string htmlPath =
+    "/home/garden/GraduateWork/SearchEngine/index.html";
+
 std::string url_decode(const std::string &encoded) {
   std::string res;
   std::istringstream iss(encoded);
@@ -83,7 +86,7 @@ void HttpConnection::handleRequest() {
 void HttpConnection::createResponseGet() {
   if (request_.target() == "/") {
     response_.set(http::field::content_type, "text/html");
-    std::ifstream fileHTML("../index.html");
+    std::ifstream fileHTML(htmlPath);
     if (fileHTML) {
       std::stringstream bufferHTML;
       bufferHTML << fileHTML.rdbuf();

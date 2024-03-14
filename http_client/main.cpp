@@ -5,8 +5,18 @@
 #include <thread>
 #include <vector>
 
+#include "../ini_parser/ini_parser.h"
 #include "http_utils.h"
 #include <functional>
+
+namespace {
+
+const std::string configPath =
+    "/home/garden/GraduateWork/SearchEngine/configs/config.ini";
+const std::string StartPageSection = "Crowler.StartPage";
+const std::string RecursionDepthSection = "Crowler.RecursionDepth";
+
+} // namespace
 
 std::mutex mtx;
 std::condition_variable cv;
@@ -70,6 +80,15 @@ void parseLink(const httputils::Link &link, int depth) {
 
 int main() {
   try {
+    IniParser iniParser(configPath);
+    int depth = 1;
+    int startPage = 1;
+    try {
+      depth = iniParser.getValue<int>(RecursionDepthSection);
+      startPage = iniParser.getValue<int>(StartPageSection);
+    } catch (std::exception &ex) {
+      std::cout << ex.what();
+    }
     int numThreads = std::thread::hardware_concurrency();
     std::vector<std::thread> threadPool;
 
@@ -82,7 +101,7 @@ int main() {
 
     {
       std::lock_guard<std::mutex> lock(mtx);
-      tasks.push([link]() { parseLink(link, 1); });
+      tasks.push([link, depth]() { parseLink(link, depth); });
       cv.notify_one();
     }
 

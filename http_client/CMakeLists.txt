@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
 
-
 add_executable(HttpClientApp
 	main.cpp
 	http_utils.cpp
