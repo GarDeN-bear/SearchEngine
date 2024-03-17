@@ -26,7 +26,7 @@ public:
 
   /**
    * @brief Получить обработанную HTML-страницу.
-   * HTML-страница в виде строки.
+   * @return Обработанная HTML-страница в виде строки.
    */
   std::string getHandledHtml() const;
 

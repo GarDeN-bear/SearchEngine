@@ -5,9 +5,10 @@
 #include <thread>
 #include <vector>
 
-#include "../html_parser/html_parser.h"
-#include "../ini_parser/ini_parser.h"
-#include "http_utils.h"
+#include "html_parser/html_parser.h"
+#include "http_utils/http_utils.h"
+#include "ini_parser/ini_parser.h"
+#include "links_getter/links_getter.h"
 #include <functional>
 
 namespace {
@@ -23,6 +24,7 @@ std::mutex mtx;
 std::condition_variable cv;
 std::queue<std::function<void()>> tasks;
 bool exitThreadPool = false;
+int count = 0;
 
 void threadPoolWorker() {
   std::unique_lock<std::mutex> lock(mtx);
@@ -41,29 +43,35 @@ void threadPoolWorker() {
 
 void parseLink(const httputils::Link &link, int depth) {
   try {
-
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     std::string html = getHtmlContent(link);
 
     if (html.size() == 0) {
       std::cout << "Failed to get HTML Content" << std::endl;
+      std::cout << "https://" + link.hostName + link.query << std::endl;
       return;
     }
+    // TODO: Parse HTML code here on your own (done)
     HtmlParser htmlParser;
     htmlParser.setHtml(html);
-    // TODO: Parse HTML code here on your own
 
     std::cout << "html content:" << std::endl;
-    std::cout << htmlParser.getHandledHtml() << std::endl;
+    // std::cout << html << std::endl;
 
     // TODO: Collect more links from HTML code and add them to the parser like
     // that:
 
-    std::vector<httputils::Link> links = {
-        {httputils::ProtocolType::HTTPS, "en.wikipedia.org", "/wiki/Wikipedia"},
-        {httputils::ProtocolType::HTTPS, "wikimediafoundation.org", "/"},
-    };
+    // std::vector<Link> links = {
+    // 	{ProtocolType::HTTPS, "en.wikipedia.org", "/wiki/Wikipedia"},
+    // 	{ProtocolType::HTTPS, "wikimediafoundation.org", "/"},
+    // };
+    LinksGetter linksGetter;
+    linksGetter.setCurrentLink(link);
+    linksGetter.setHtml(html);
+
+    std::vector<httputils::Link> links = linksGetter.getLinks();
+    count += links.size();
 
     if (depth > 0) {
       std::lock_guard<std::mutex> lock(mtx);
@@ -121,5 +129,6 @@ int main() {
   } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
   }
+  std::cout << count << std::endl;
   return 0;
 }
