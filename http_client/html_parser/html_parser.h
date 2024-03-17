@@ -39,6 +39,9 @@ private:
   std::regex htmlTags_;
   //! Знаки препинания, табуляции, переносов строк и т.д.
   std::regex nonAlnum_;
+  //! Слова короче 3 символов.
+  std::regex pattern_;
+
   /**
    * @brief Обработать HTML-страницу.
    */

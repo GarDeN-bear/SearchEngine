@@ -24,7 +24,6 @@ std::mutex mtx;
 std::condition_variable cv;
 std::queue<std::function<void()>> tasks;
 bool exitThreadPool = false;
-int count = 0;
 
 void threadPoolWorker() {
   std::unique_lock<std::mutex> lock(mtx);
@@ -49,7 +48,6 @@ void parseLink(const httputils::Link &link, int depth) {
 
     if (html.size() == 0) {
       std::cout << "Failed to get HTML Content" << std::endl;
-      std::cout << "https://" + link.hostName + link.query << std::endl;
       return;
     }
     // TODO: Parse HTML code here on your own (done)
@@ -57,21 +55,20 @@ void parseLink(const httputils::Link &link, int depth) {
     htmlParser.setHtml(html);
 
     std::cout << "html content:" << std::endl;
-    // std::cout << html << std::endl;
+    std::cout << htmlParser.getHandledHtml() << std::endl;
 
     // TODO: Collect more links from HTML code and add them to the parser like
     // that:
 
-    // std::vector<Link> links = {
-    // 	{ProtocolType::HTTPS, "en.wikipedia.org", "/wiki/Wikipedia"},
-    // 	{ProtocolType::HTTPS, "wikimediafoundation.org", "/"},
-    // };
-    LinksGetter linksGetter;
-    linksGetter.setCurrentLink(link);
-    linksGetter.setHtml(html);
+    std::vector<httputils::Link> links = {
+        {httputils::HTTP, "en.wikipedia.org", "/wiki/Wikipedia"},
+        {httputils::HTTPS, "wikimediafoundation.org", "/"},
+    };
+    // LinksGetter linksGetter;
+    // linksGetter.setCurrentLink(link);
+    // linksGetter.setHtml(html);
 
-    std::vector<httputils::Link> links = linksGetter.getLinks();
-    count += links.size();
+    // std::vector<httputils::Link> links = linksGetter.getLinks();
 
     if (depth > 0) {
       std::lock_guard<std::mutex> lock(mtx);
@@ -129,6 +126,5 @@ int main() {
   } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
   }
-  std::cout << count << std::endl;
   return 0;
 }
