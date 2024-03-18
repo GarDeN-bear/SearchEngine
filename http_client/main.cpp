@@ -56,22 +56,13 @@ void parseLink(const httputils::Link &link,
       return;
     }
 
-    Indexer indexer;
+    Indexer indexer(sqlDataConnection);
+    indexer.setCurrentLink(link);
     indexer.setHtml(html);
-    SqlDatabase sqlDatabase(sqlDataConnection);
     // TODO: Parse HTML code here on your own (done)
-    HtmlParser htmlParser;
-    htmlParser.setHtml(html);
-    const std::string handledHtml = htmlParser.getHandledHtml();
-    std::istringstream iss(handledHtml);
-    std::string word;
-
-    while (iss >> word) {
-      sqlDatabase.addWord(word);
-    }
 
     std::cout << "html content:" << std::endl;
-    std::cout << htmlParser.getHandledHtml() << std::endl;
+    std::cout << indexer.getHandledHtml() << std::endl;
     // TODO: Collect more links from HTML code and add them to the parser
     // like that:
 
@@ -79,14 +70,7 @@ void parseLink(const httputils::Link &link,
     //     {httputils::HTTP, "en.wikipedia.org", "/wiki/Wikipedia"},
     //     {httputils::HTTPS, "wikimediafoundation.org", "/"},
     // };
-    LinksGetter linksGetter;
-    linksGetter.setCurrentLink(link);
-    linksGetter.setHtml(html);
-    linksGetter.getProtocol(link.protocol);
-    const std::string URL =
-        link.protocol + "://" +
-        link.sqlDatabase.addURL("https://en.wikipedia.org/wiki/Wikipedia/");
-    std::vector<httputils::Link> links = linksGetter.getLinks();
+    std::vector<httputils::Link> links = indexer.getLinks();
 
     if (depth > 0) {
       std::lock_guard<std::mutex> lock(mtx);

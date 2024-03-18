@@ -91,3 +91,9 @@ LinksGetter::setProtocolType(const std::string protocol) {
 }
 
 std::vector<httputils::Link> LinksGetter::getLinks() const { return links_; }
+
+std::string LinksGetter::getURL() {
+  const std::string URL =
+      getProtocol(link_.protocol) + "://" + link_.hostName + link_.query;
+  return URL;
+}

@@ -38,11 +38,10 @@ public:
   std::vector<httputils::Link> getLinks() const;
 
   /**
-   * @brief Получить протокол HTML-страницы.
-   * @param ptococolType Тип протокола ссылки.
-   * @return Протокол текущей HTML-страницы.
+   * @brief Получить URL.
+   * @return Ссылка URL текущей HTML-страницы.
    */
-  std::string getProtocol(const httputils::ProtocolType &protocolType);
+  std::string getURL();
 
 private:
   //! HTML-страница.
@@ -60,6 +59,13 @@ private:
    * @brief Обработать HTML-страницу.
    */
   void handleHtml();
+
+  /**
+   * @brief Получить протокол HTML-страницы.
+   * @param ptococolType Тип протокола ссылки.
+   * @return Протокол текущей HTML-страницы.
+   */
+  std::string getProtocol(const httputils::ProtocolType &protocolType);
 
   /**
    * @brief Установить тип протокола.
