@@ -27,6 +27,5 @@ void HtmlParser::handleHtml() {
     oss << word << " ";
   }
   htmlHandled_ = oss.str();
-  // Удаление лишнего пробела в конце строки
   htmlHandled_.pop_back();
 }
