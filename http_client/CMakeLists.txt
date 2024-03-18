@@ -16,6 +16,10 @@ add_library(links_getter
 	links_getter/links_getter.cpp
 )
 
+add_library(sql_database 
+	sql_database/sql_database.cpp
+)
+
 target_include_directories(http_client PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -30,6 +34,7 @@ target_link_libraries(http_client PUBLIC
 	http_utils
 	html_parser
 	links_getter
+	sql_database
 	pqxx
 	OpenSSL::SSL
 	${Boost_LIBRARIES}

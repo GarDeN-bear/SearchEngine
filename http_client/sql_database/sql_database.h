@@ -3,6 +3,23 @@
 #include <pqxx/pqxx>
 
 /**
+ * @brief Данные для соединения с SQL базой данных.
+ */
+struct SqlDataConnection
+{
+  //! Локальный хост.
+  std::string host;
+  //! Порт подключения.
+  std::string port;
+  //! Название базы данных.
+  std::string dbname;
+  //! Имя пользователя.
+  std::string user;
+  //! Пароль для подключения к базе данных.
+  std::string password;
+};
+
+/**
  * @brief SQL база данных.
  * @details Для хранения информации о частотности слов будут использоваться две
  * таблицы — «Документы» и «Слова» — с реализованной  между ними связью
@@ -21,9 +38,7 @@ public:
    * @param user Имя пользователя.
    * @param password Пароль для подключения к базе данных.
    */
-  SqlDatabase(const std::string host, const std::string port,
-              const std::string dbname, const std::string user,
-              const std::string password);
+  SqlDatabase(const SqlDataConnection & sqlDataConnection);
   /**
    * @brief Деструктор.
    * @details Выполняет отключение от базы данных и разрушает сам объект
@@ -31,39 +46,31 @@ public:
    */
   ~SqlDatabase();
 
-  // Метод, создающий структуру БД (таблицы)
-  void createTable(std::string table);
-  // Метод, позволяющий добавить нового клиента
-  void addClient(std::string table, std::string first_name,
-                 std::string last_name, std::string email,
-                 std::string phone_number);
-  // Метод, позволяющий добавить телефон для существующего клиента
-  void addPhoneNumber(std::string table, int id, std::string phone_number);
-  // Метод, позволяющий изменить данные о клиенте
-  void updateClient(std::string table, int id, std::string first_name_new,
-                    std::string last_name_new, std::string email_new,
-                    std::string phone_number_new);
-  // Метод, позволяющий удалить телефон для существующего клиента
-  void dropPhoneNumber(std::string table, int id, std::string phone_number);
-  // Метод, позволяющий удалить существующего клиента
-  void deleteClient(std::string table, int id);
-  // Метод, позволяющий найти клиента по его данным (имени, фамилии, email-у или
-  // телефону)
-  void findClient(std::string table, std::string first_name,
-                  std::string last_name, std::string email,
-                  std::string phone_number);
+  // // Метод, создающий структуру БД (таблицы)
+  // void createTable(std::string table);
+  // // Метод, позволяющий добавить нового клиента
+  // void addClient(std::string table, std::string first_name,
+  //                std::string last_name, std::string email,
+  //                std::string phone_number);
+  // // Метод, позволяющий добавить телефон для существующего клиента
+  // void addPhoneNumber(std::string table, int id, std::string phone_number);
+  // // Метод, позволяющий изменить данные о клиенте
+  // void updateClient(std::string table, int id, std::string first_name_new,
+  //                   std::string last_name_new, std::string email_new,
+  //                   std::string phone_number_new);
+  // // Метод, позволяющий удалить телефон для существующего клиента
+  // void dropPhoneNumber(std::string table, int id, std::string phone_number);
+  // // Метод, позволяющий удалить существующего клиента
+  // void deleteClient(std::string table, int id);
+  // // Метод, позволяющий найти клиента по его данным (имени, фамилии, email-у или
+  // // телефону)
+  // void findClient(std::string table, std::string first_name,
+  //                 std::string last_name, std::string email,
+  //                 std::string phone_number);
 
 private:
-  //! Локальный хост.
-  std::string host_;
-  //! Порт подключения.
-  std::string port_;
-  //! Название базы данных.
-  std::string dbname_;
-  //! Имя пользователя.
-  std::string user_;
-  //! Пароль для подключения к базе данных.
-  std::string password_;
+  //! Данные для соединения с SQL базой данных.
+  SqlDataConnection sqlDataConnection_;
   //! Соединение к базе данных SQL.
   std::unique_ptr<pqxx::connection> c_;
 };

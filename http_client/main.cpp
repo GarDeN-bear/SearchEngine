@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "html_parser/html_parser.h"
+#include "sql_database/sql_database.h"
 #include "http_utils/http_utils.h"
 #include "ini_parser/ini_parser.h"
 #include "links_getter/links_getter.h"
@@ -17,6 +18,11 @@ const std::string configPath =
     "/home/garden/GraduateWork/SearchEngine/configs/config.ini";
 const std::string StartPageSection = "Crowler.StartPage";
 const std::string RecursionDepthSection = "Crowler.RecursionDepth";
+const std::string HostSection = "SQLConnection.Host";
+const std::string PortSection = "SQLConnection.Port";
+const std::string DataBaseNameSection = "SQLConnection.DataBaseName";
+const std::string UserSection = "SQLConnection.User";
+const std::string PasswordSection = "SQLConnection.Password";
 
 } // namespace
 
@@ -40,7 +46,7 @@ void threadPoolWorker() {
   }
 }
 
-void parseLink(const httputils::Link &link, int depth) {
+void parseLink(const httputils::Link &link, const SqlDataConnection &sqlDataConnection, int depth) {
   try {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
@@ -57,6 +63,7 @@ void parseLink(const httputils::Link &link, int depth) {
     std::cout << "html content:" << std::endl;
     std::cout << htmlParser.getHandledHtml() << std::endl;
 
+    SqlDatabase sqlDatabase(sqlDataConnection);
     // TODO: Collect more links from HTML code and add them to the parser like
     // that:
 
@@ -76,7 +83,7 @@ void parseLink(const httputils::Link &link, int depth) {
       size_t count = links.size();
       size_t index = 0;
       for (auto &subLink : links) {
-        tasks.push([subLink, depth]() { parseLink(subLink, depth - 1); });
+        tasks.push([subLink, sqlDataConnection, depth]() { parseLink(subLink, sqlDataConnection, depth - 1); });
       }
       cv.notify_one();
     }
@@ -90,9 +97,16 @@ int main() {
     IniParser iniParser(configPath);
     int depth = 1;
     int startPage = 1;
+    SqlDataConnection sqlDataConnection;
     try {
       depth = iniParser.getValue<int>(RecursionDepthSection);
       startPage = iniParser.getValue<int>(StartPageSection);
+
+      sqlDataConnection.host = iniParser.getValue<std::string>(HostSection);
+      sqlDataConnection.port = iniParser.getValue<std::string>(PortSection);
+      sqlDataConnection.dbname = iniParser.getValue<std::string>(DataBaseNameSection);
+      sqlDataConnection.user = iniParser.getValue<std::string>(UserSection);
+      sqlDataConnection.password = iniParser.getValue<std::string>(PasswordSection);
     } catch (std::exception &ex) {
       std::cout << ex.what();
     }
@@ -108,7 +122,7 @@ int main() {
 
     {
       std::lock_guard<std::mutex> lock(mtx);
-      tasks.push([link, depth]() { parseLink(link, depth); });
+      tasks.push([link, sqlDataConnection, depth]() { parseLink(link, sqlDataConnection, depth); });
       cv.notify_one();
     }
 
