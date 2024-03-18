@@ -5,11 +5,9 @@
 #include <thread>
 #include <vector>
 
-#include "html_parser/html_parser.h"
-#include "sql_database/sql_database.h"
-#include "http_utils/http_utils.h"
+#include "indexer/indexer.h"
 #include "ini_parser/ini_parser.h"
-#include "links_getter/links_getter.h"
+#include "utils/http_utils.h"
 #include <functional>
 
 namespace {
@@ -46,7 +44,8 @@ void threadPoolWorker() {
   }
 }
 
-void parseLink(const httputils::Link &link, const SqlDataConnection &sqlDataConnection, int depth) {
+void parseLink(const httputils::Link &link,
+               const SqlDataConnection &sqlDataConnection, int depth) {
   try {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
@@ -56,26 +55,38 @@ void parseLink(const httputils::Link &link, const SqlDataConnection &sqlDataConn
       std::cout << "Failed to get HTML Content" << std::endl;
       return;
     }
+
+    Indexer indexer;
+    indexer.setHtml(html);
+    SqlDatabase sqlDatabase(sqlDataConnection);
     // TODO: Parse HTML code here on your own (done)
     HtmlParser htmlParser;
     htmlParser.setHtml(html);
+    const std::string handledHtml = htmlParser.getHandledHtml();
+    std::istringstream iss(handledHtml);
+    std::string word;
+
+    while (iss >> word) {
+      sqlDatabase.addWord(word);
+    }
 
     std::cout << "html content:" << std::endl;
     std::cout << htmlParser.getHandledHtml() << std::endl;
+    // TODO: Collect more links from HTML code and add them to the parser
+    // like that:
 
-    SqlDatabase sqlDatabase(sqlDataConnection);
-    // TODO: Collect more links from HTML code and add them to the parser like
-    // that:
-
-    std::vector<httputils::Link> links = {
-        {httputils::HTTP, "en.wikipedia.org", "/wiki/Wikipedia"},
-        {httputils::HTTPS, "wikimediafoundation.org", "/"},
-    };
-    // LinksGetter linksGetter;
-    // linksGetter.setCurrentLink(link);
-    // linksGetter.setHtml(html);
-
-    // std::vector<httputils::Link> links = linksGetter.getLinks();
+    // std::vector<httputils::Link> links = {
+    //     {httputils::HTTP, "en.wikipedia.org", "/wiki/Wikipedia"},
+    //     {httputils::HTTPS, "wikimediafoundation.org", "/"},
+    // };
+    LinksGetter linksGetter;
+    linksGetter.setCurrentLink(link);
+    linksGetter.setHtml(html);
+    linksGetter.getProtocol(link.protocol);
+    const std::string URL =
+        link.protocol + "://" +
+        link.sqlDatabase.addURL("https://en.wikipedia.org/wiki/Wikipedia/");
+    std::vector<httputils::Link> links = linksGetter.getLinks();
 
     if (depth > 0) {
       std::lock_guard<std::mutex> lock(mtx);
@@ -83,7 +94,9 @@ void parseLink(const httputils::Link &link, const SqlDataConnection &sqlDataConn
       size_t count = links.size();
       size_t index = 0;
       for (auto &subLink : links) {
-        tasks.push([subLink, sqlDataConnection, depth]() { parseLink(subLink, sqlDataConnection, depth - 1); });
+        tasks.push([subLink, sqlDataConnection, depth]() {
+          parseLink(subLink, sqlDataConnection, depth - 1);
+        });
       }
       cv.notify_one();
     }
@@ -104,9 +117,11 @@ int main() {
 
       sqlDataConnection.host = iniParser.getValue<std::string>(HostSection);
       sqlDataConnection.port = iniParser.getValue<std::string>(PortSection);
-      sqlDataConnection.dbname = iniParser.getValue<std::string>(DataBaseNameSection);
+      sqlDataConnection.dbname =
+          iniParser.getValue<std::string>(DataBaseNameSection);
       sqlDataConnection.user = iniParser.getValue<std::string>(UserSection);
-      sqlDataConnection.password = iniParser.getValue<std::string>(PasswordSection);
+      sqlDataConnection.password =
+          iniParser.getValue<std::string>(PasswordSection);
     } catch (std::exception &ex) {
       std::cout << ex.what();
     }
@@ -122,7 +137,9 @@ int main() {
 
     {
       std::lock_guard<std::mutex> lock(mtx);
-      tasks.push([link, sqlDataConnection, depth]() { parseLink(link, sqlDataConnection, depth); });
+      tasks.push([link, sqlDataConnection, depth]() {
+        parseLink(link, sqlDataConnection, depth);
+      });
       cv.notify_one();
     }
 

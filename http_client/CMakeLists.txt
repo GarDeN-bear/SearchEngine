@@ -3,21 +3,24 @@ cmake_minimum_required(VERSION 3.20)
 add_executable(http_client
 	main.cpp
 )
+add_library(indexer 
+	indexer/indexer.cpp
+)
 
 add_library(html_parser 
-	html_parser/html_parser.cpp
+	indexer/html_parser/html_parser.cpp
 )
 
 add_library(http_utils
-	http_utils/http_utils.cpp
+	utils/http_utils.cpp
 )
 
 add_library(links_getter 
-	links_getter/links_getter.cpp
+	indexer/links_getter/links_getter.cpp
 )
 
 add_library(sql_database 
-	sql_database/sql_database.cpp
+	indexer/sql_database/sql_database.cpp
 )
 
 target_include_directories(http_client PUBLIC
@@ -31,6 +34,7 @@ target_include_directories(http_client PRIVATE
 )
 
 target_link_libraries(http_client PUBLIC 
+	indexer
 	http_utils
 	html_parser
 	links_getter

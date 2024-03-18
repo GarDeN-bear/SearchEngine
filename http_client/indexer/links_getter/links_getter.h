@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../http_utils/http_utils.h"
+#include "../../utils/http_utils.h"
 #include <regex>
 #include <string>
 #include <vector>
@@ -37,6 +37,13 @@ public:
    */
   std::vector<httputils::Link> getLinks() const;
 
+  /**
+   * @brief Получить протокол HTML-страницы.
+   * @param ptococolType Тип протокола ссылки.
+   * @return Протокол текущей HTML-страницы.
+   */
+  std::string getProtocol(const httputils::ProtocolType &protocolType);
+
 private:
   //! HTML-страница.
   std::string html_;
@@ -55,17 +62,9 @@ private:
   void handleHtml();
 
   /**
-   * @brief Получить протокол HTML-страницы.
-   * @return Протокол текущей HTML-страницы.
-   *
-   */
-  std::string getProtocol();
-
-  /**
    * @brief Установить тип протокола.
    * @param ptococol Протокол ссылки в виде строки.
    * @return Протокол ссылки.
-   *
    */
   httputils::ProtocolType setProtocolType(const std::string protocol);
 };

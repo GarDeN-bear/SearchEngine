@@ -12,6 +12,8 @@ SqlDatabase::SqlDatabase(const SqlDataConnection &sqlDataConnection)
   } catch (std::exception &ex) {
     std::cout << "Error: " << ex.what() << std::endl;
   }
+
+  createTables();
 }
 
 SqlDatabase::~SqlDatabase() {
@@ -19,18 +21,62 @@ SqlDatabase::~SqlDatabase() {
   std::cout << "Disconnection SQL database is ready" << std::endl;
 }
 
-// void SqlDatabase::createTable(std::string table) {
-//   pqxx::work tx{*c};
-//   std::string sqlQueryCrTab = "CREATE TABLE " + table +
-//                               " (id SERIAL PRIMARY KEY, "
-//                               "first_name VARCHAR(50) NOT NULL, "
-//                               "last_name VARCHAR(50) NOT NULL, "
-//                               "email VARCHAR(50) UNIQUE NOT NULL, "
-//                               "phone_number VARCHAR(1000) UNIQUE);";
-//   tx.exec(sqlQueryCrTab);
-//   tx.commit();
-//   std::cout << "Table created successfully" << std::endl;
-// }
+void SqlDatabase::createTables() {
+  createTableDocuments();
+  createTableWords();
+  createTableDocumentsWords();
+}
+
+void SqlDatabase::createTableDocuments() {
+  pqxx::work tx{*c_};
+  const std::string sqlQueryCrTab = "CREATE TABLE IF NOT EXISTS documents"
+                                    " (id SERIAL PRIMARY KEY, "
+                                    "URL VARCHAR(50) NOT NULL);";
+  tx.exec(sqlQueryCrTab);
+  tx.commit();
+  std::cout << "Table created successfully" << std::endl;
+}
+
+void SqlDatabase::createTableWords() {
+  pqxx::work tx{*c_};
+  const std::string sqlQueryCrTab = "CREATE TABLE IF NOT EXISTS words"
+                                    " (id SERIAL PRIMARY KEY, "
+                                    "word VARCHAR(50) NOT NULL);";
+  tx.exec(sqlQueryCrTab);
+  tx.commit();
+  std::cout << "Table created successfully" << std::endl;
+}
+
+void SqlDatabase::createTableDocumentsWords() {
+  pqxx::work tx{*c_};
+  const std::string sqlQueryCrTab =
+      "CREATE TABLE IF NOT EXISTS documents_words"
+      " (documents_id INT REFERENCES documents(id), "
+      "words_id INT REFERENCES words(id), "
+      "count INT NOT NULL, "
+      "CONSTRAINT documents_words_pk PRIMARY KEY(documents_id, words_id));";
+  tx.exec(sqlQueryCrTab);
+  tx.commit();
+  std::cout << "Table created successfully" << std::endl;
+}
+
+void SqlDatabase::addURL(const std::string URL) {
+  pqxx::work tx{*c_};
+  std::string insert = "INSERT INTO " + tx.esc("documents") +
+                       " (URL) VALUES ('" + tx.esc(URL) + "')";
+  tx.exec(insert);
+  tx.commit();
+  std::cout << "Client added successfully" << std::endl;
+}
+
+void SqlDatabase::addWord(const std::string word) {
+  pqxx::work tx{*c_};
+  std::string insert = "INSERT INTO " + tx.esc("words") + " (word) VALUES ('" +
+                       tx.esc(word) + "')";
+  tx.exec(insert);
+  tx.commit();
+  std::cout << "Client added successfully" << std::endl;
+}
 
 // void SqlDatabase::addClient(std::string table, std::string first_name,
 //                             std::string last_name, std::string email,

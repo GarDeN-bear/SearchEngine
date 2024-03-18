@@ -29,7 +29,7 @@ void LinksGetter::handleHtml() {
         path = urlMatch[3].str();
       }
     } else if (url.substr(0, 2) == "//") {
-      url = getProtocol() + ":" + url;
+      url = getProtocol(link_.protocol) + ":" + url;
       if (std::regex_match(url, urlMatch, urlRegex_)) {
         if (urlMatch.size() == 4) {
           protocol = urlMatch[1].str();
@@ -38,7 +38,7 @@ void LinksGetter::handleHtml() {
         }
       }
     } else {
-      url = getProtocol() + "://" + link_.hostName + url;
+      url = getProtocol(link_.protocol) + "://" + link_.hostName + url;
       if (std::regex_match(url, urlMatch, urlRegex_)) {
         if (urlMatch.size() == 4) {
           protocol = urlMatch[1].str();
@@ -62,9 +62,10 @@ void LinksGetter::handleHtml() {
   }
 }
 
-std::string LinksGetter::getProtocol() {
+std::string
+LinksGetter::getProtocol(const httputils::ProtocolType &protocolType) {
   std::string protocol;
-  switch (link_.protocol) {
+  switch (protocolType) {
   case httputils::HTTP:
     protocol = "http";
     break;
