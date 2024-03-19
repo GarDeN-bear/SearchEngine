@@ -95,11 +95,15 @@ int main() {
       sqlDataConnection.user = iniParser.getValue<std::string>(UserSection);
       sqlDataConnection.password =
           iniParser.getValue<std::string>(PasswordSection);
+
     } catch (std::exception &ex) {
       std::cout << ex.what();
     }
-    Indexer indexer(sqlDataConnection);
-    indexer.dropTables();
+
+    {
+      Indexer indexer(sqlDataConnection);
+      indexer.dropTables();
+    }
 
     int numThreads = std::thread::hardware_concurrency();
     std::vector<std::thread> threadPool;

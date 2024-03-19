@@ -25,14 +25,12 @@ void SqlDatabase::createTables() {
 }
 
 void SqlDatabase::dropTables() {
-  //! TODO Не работает, почему не знаю.
-  // pqxx::work tx{*c_};
-  // const std::string sqlQueryDropTabs = "DROP TABLE IF EXISTS documents_words;
-  // "
-  //                                      "DROP TABLE IF EXISTS documents; "
-  //                                      "DROP TABLE IF EXISTS words; ";
-  // tx.exec(sqlQueryDropTabs);
-  // tx.commit();
+  pqxx::work tx{*c_};
+  const std::string sqlQueryDropTabs = "DROP TABLE IF EXISTS documents_words; "
+                                       "DROP TABLE IF EXISTS documents; "
+                                       "DROP TABLE IF EXISTS words; ";
+  tx.exec(sqlQueryDropTabs);
+  tx.commit();
 }
 
 void SqlDatabase::createTableDocuments() {
