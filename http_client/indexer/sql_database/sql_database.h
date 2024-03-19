@@ -1,6 +1,8 @@
-#include <iostream>
-#include <memory>
+#pragma once
+
+#include <map>
 #include <pqxx/pqxx>
+#include <string>
 
 /**
  * @brief Данные для соединения с SQL базой данных (БД).
@@ -31,11 +33,7 @@ public:
    * @brief Конструктор.
    * @details Создаёт объект соединения pqxx::connection и заполняет данные для
    * подключения к БД PostgreSQL.
-   * @param host Локальный хост.
-   * @param port Порт подключения.
-   * @param dbname Названиве БД.
-   * @param user Имя пользователя.
-   * @param password Пароль для подключения к БД.
+   * @param sqlDataConnection Данные для соединения с SQL базой данных (БД).
    */
   SqlDatabase(const SqlDataConnection &sqlDataConnection);
 
@@ -47,38 +45,34 @@ public:
   ~SqlDatabase();
 
   /**
-   * @brief Добавить новый документ.
+   * @brief Установить URL нового документ.
    * @param URL URL документа.
    */
-  void addURL(const std::string URL);
+  void setURL(const std::string URL);
 
   /**
-   * @brief Добавить новое слово из документа.
+   * @brief Установить новое слово из документа.
    * @param word Слово.
    */
-  void addWord(const std::string word);
-  // // Метод, позволяющий добавить телефон для существующего клиента
-  // void addPhoneNumber(std::string table, int id, std::string phone_number);
-  // // Метод, позволяющий изменить данные о клиенте
-  // void updateClient(std::string table, int id, std::string first_name_new,
-  //                   std::string last_name_new, std::string email_new,
-  //                   std::string phone_number_new);
-  // // Метод, позволяющий удалить телефон для существующего клиента
-  // void dropPhoneNumber(std::string table, int id, std::string phone_number);
-  // // Метод, позволяющий удалить существующего клиента
-  // void deleteClient(std::string table, int id);
-  // // Метод, позволяющий найти клиента по его данным (имени, фамилии, email-у
-  // или
-  // // телефону)
-  // void findClient(std::string table, std::string first_name,
-  //                 std::string last_name, std::string email,
-  //                 std::string phone_number);
+  void setWord(const std::string word);
+
+  /**
+   * @brief Добавить id URL документа, id слова и количество слов в документе в
+   * таблицу связку.
+   */
+  void addIds();
 
 private:
-  //! Данные для соединения с SQL базой данных.
+  //! Данные для соединения с SQL БД.
   SqlDataConnection sqlDataConnection_;
   //! Соединение к БД SQL.
   std::unique_ptr<pqxx::connection> c_;
+  //! URL нового документа.
+  std::string URL_;
+  //! Словарь документов и слов.
+  std::map<std::string, std::vector<std::string>> documentsWords_;
+  //! Словарь слов и их количества в документе.
+  std::map<std::string, int> wordsCounts_;
 
   /**
    * @brief Создать таблицы "documents", "words", "documents_words".
@@ -99,4 +93,9 @@ private:
    * @brief Создать таблицу "documents_words".
    */
   void createTableDocumentsWords();
+
+  /**
+   * @brief Определить количество слов.
+   */
+  void findWordsCounts();
 };

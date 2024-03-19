@@ -1,5 +1,4 @@
 #include "links_getter.h"
-// #include <iostream>
 
 LinksGetter::LinksGetter()
     : html_(), link_(httputils::ProtocolType::HTTPS, "", ""), links_(),

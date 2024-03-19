@@ -1,5 +1,6 @@
 #include "http_connection.h"
 
+#include "searcher/searcher.h"
 #include <codecvt>
 #include <fstream>
 #include <iomanip>
@@ -115,6 +116,9 @@ void HttpConnection::createResponsePost() {
 
     std::string key = s.substr(0, pos);
     std::string value = s.substr(pos + 1);
+    Searcher searcher;
+    searhcer.setSearchValue(value);
+    searhcer.getSearchResult(value);
 
     std::string utf8value = convert_to_utf8(value);
 

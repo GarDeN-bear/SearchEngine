@@ -1,14 +1,15 @@
 #include "sql_database.h"
+#include <iostream>
 
 SqlDatabase::SqlDatabase(const SqlDataConnection &sqlDataConnection)
-    : sqlDataConnection_(sqlDataConnection) {
+    : sqlDataConnection_(sqlDataConnection), URL_(), documentsWords_() {
   try {
     c_ = std::make_unique<pqxx::connection>(
         "host=" + sqlDataConnection_.host + " " + "port=" +
         sqlDataConnection_.port + " " + "dbname=" + sqlDataConnection_.dbname +
         " " + "user=" + sqlDataConnection_.user + " " +
         "password=" + sqlDataConnection_.password + " ");
-    std::cout << "Connection to SQL database is ready" << std::endl;
+    // std::cout << "Connection to SQL database is ready" << std::endl;
   } catch (std::exception &ex) {
     std::cout << "Error: " << ex.what() << std::endl;
   }
@@ -18,7 +19,7 @@ SqlDatabase::SqlDatabase(const SqlDataConnection &sqlDataConnection)
 
 SqlDatabase::~SqlDatabase() {
   c_->disconnect();
-  std::cout << "Disconnection SQL database is ready" << std::endl;
+  // std::cout << "Disconnection SQL database is ready" << std::endl;
 }
 
 void SqlDatabase::createTables() {
@@ -31,174 +32,97 @@ void SqlDatabase::createTableDocuments() {
   pqxx::work tx{*c_};
   const std::string sqlQueryCrTab = "CREATE TABLE IF NOT EXISTS documents"
                                     " (id SERIAL PRIMARY KEY, "
-                                    "URL VARCHAR(50) NOT NULL);";
+                                    "document VARCHAR(100) NOT NULL);";
   tx.exec(sqlQueryCrTab);
   tx.commit();
-  std::cout << "Table created successfully" << std::endl;
 }
 
 void SqlDatabase::createTableWords() {
   pqxx::work tx{*c_};
   const std::string sqlQueryCrTab = "CREATE TABLE IF NOT EXISTS words"
                                     " (id SERIAL PRIMARY KEY, "
-                                    "word VARCHAR(50) NOT NULL);";
+                                    "word VARCHAR(100) NOT NULL);";
   tx.exec(sqlQueryCrTab);
   tx.commit();
-  std::cout << "Table created successfully" << std::endl;
 }
 
 void SqlDatabase::createTableDocumentsWords() {
   pqxx::work tx{*c_};
   const std::string sqlQueryCrTab =
       "CREATE TABLE IF NOT EXISTS documents_words"
-      " (documents_id INT REFERENCES documents(id), "
-      "words_id INT REFERENCES words(id), "
-      "count INT NOT NULL, "
-      "CONSTRAINT documents_words_pk PRIMARY KEY(documents_id, words_id));";
+      " (document_id INT REFERENCES documents(id), "
+      "word_id INT REFERENCES words(id), "
+      "count INT, "
+      "CONSTRAINT documents_words_pk PRIMARY KEY(document_id, word_id));";
   tx.exec(sqlQueryCrTab);
   tx.commit();
-  std::cout << "Table created successfully" << std::endl;
 }
 
-void SqlDatabase::addURL(const std::string URL) {
-  pqxx::work tx{*c_};
-  std::string insert = "INSERT INTO " + tx.esc("documents") +
-                       " (URL) VALUES ('" + tx.esc(URL) + "')";
-  tx.exec(insert);
-  tx.commit();
-  std::cout << "Client added successfully" << std::endl;
+void SqlDatabase::findWordsCounts() {
+  for (int i = 0; i < documentsWords_[URL_].size(); ++i) {
+    wordsCounts_[documentsWords_[URL_][i]]++;
+  }
 }
 
-void SqlDatabase::addWord(const std::string word) {
-  pqxx::work tx{*c_};
-  std::string insert = "INSERT INTO " + tx.esc("words") + " (word) VALUES ('" +
-                       tx.esc(word) + "')";
-  tx.exec(insert);
-  tx.commit();
-  std::cout << "Client added successfully" << std::endl;
+void SqlDatabase::setURL(const std::string URL) { URL_ = URL; }
+
+void SqlDatabase::setWord(const std::string word) {
+  documentsWords_[URL_].push_back(word);
 }
 
-// void SqlDatabase::addClient(std::string table, std::string first_name,
-//                             std::string last_name, std::string email,
-//                             std::string phone_number) {
-//   pqxx::work tx{*c};
-//   std::string insert =
-//       "INSERT INTO " + tx.esc(table) +
-//       " (first_name, last_name, email, phone_number) VALUES ('" +
-//       tx.esc(first_name) + "', '" + tx.esc(last_name) + "', '" +
-//       tx.esc(email) +
-//       "', '" + tx.esc(phone_number) + "')";
-//   tx.exec(insert);
-//   tx.commit();
-//   std::cout << "Client added successfully" << std::endl;
-// }
+void SqlDatabase::addIds() {
+  pqxx::work tx0{*c_};
+  std::string insert =
+      "SELECT * FROM documents WHERE document = '" + tx0.esc(URL_) + "'";
+  pqxx::result check = tx0.exec(insert);
 
-// void SqlDatabase::addPhoneNumber(std::string table, int id,
-//                                  std::string phone_number) {
-//   pqxx::work tx{*c};
-//   std::string getPhoneNumber;
-//   pqxx::row r = tx.exec1("SELECT phone_number FROM " + tx.esc(table) +
-//                          " WHERE id = " + tx.esc(std::to_string(id)));
-//   getPhoneNumber = r.begin().as<std::string>();
-//   std::string addPhoneNumber;
-//   if (getPhoneNumber != "") {
-//     addPhoneNumber = "UPDATE " + tx.esc(table) + " SET phone_number = '" +
-//                      tx.esc(getPhoneNumber) + ", " + tx.esc(phone_number) +
-//                      "' WHERE id = '" + tx.esc(std::to_string(id)) + "'";
-//   } else {
-//     addPhoneNumber = "UPDATE " + tx.esc(table) + " SET phone_number = '" +
-//                      tx.esc(phone_number) + "' WHERE id = '" +
-//                      tx.esc(std::to_string(id)) + "'";
-//   }
-//   tx.exec(addPhoneNumber);
-//   tx.commit();
-//   std::cout << "Phone number added successfully" << std::endl;
-// }
+  if (check.empty()) {
+    tx0.commit();
+    pqxx::work tx1{*c_};
+    insert =
+        "INSERT INTO documents (document) VALUES ('" + tx1.esc(URL_) + "')";
+    tx1.exec(insert);
+    tx1.commit();
 
-// void SqlDatabase::updateClient(std::string table, int id,
-//                                std::string first_name_new,
-//                                std::string last_name_new, std::string
-//                                email_new, std::string phone_number_new) {
-//   pqxx::work tx{*c};
-//   std::string updateClient = "UPDATE " + tx.esc(table) + " SET first_name =
-//   '" +
-//                              tx.esc(first_name_new) + "', last_name = '" +
-//                              tx.esc(last_name_new) + "', email = '" +
-//                              tx.esc(email_new) + "', phone_number = '" +
-//                              tx.esc(phone_number_new) + "' WHERE id = '" +
-//                              tx.esc(std::to_string(id)) + "'";
-//   tx.exec(updateClient);
-//   tx.commit();
-//   std::cout << "Client updated successfully" << std::endl;
-// }
+    pqxx::work tx2{*c_};
+    pqxx::result documentIdresult = tx2.exec("SELECT MAX(id) FROM documents");
+    const std::string documentId = documentIdresult[0][0].as<std::string>();
+    tx2.commit();
 
-// void SqlDatabase::dropPhoneNumber(std::string table, int id,
-//                                   std::string phone_number) {
-//   pqxx::work tx{*c};
-//   std::string getPhoneNumber;
-//   pqxx::row r = tx.exec1("SELECT phone_number FROM " + tx.esc(table) +
-//                          " WHERE id = " + tx.esc(std::to_string(id)));
-//   getPhoneNumber = r.begin().as<std::string>();
-//   std::string newPhoneNumber = "empty";
-//   bool findIndexCheck = getPhoneNumber.find(phone_number) !=
-//   std::string::npos; if (findIndexCheck == true) {
-//     int findIndex = getPhoneNumber.find(phone_number);
-//     if (getPhoneNumber.find(phone_number + ", ") != std::string::npos ||
-//         getPhoneNumber.find(", " + phone_number + ", ") != std::string::npos)
-//         {
-//       getPhoneNumber.erase(findIndex, phone_number.length() + 2);
-//     } else if (getPhoneNumber.find(", " + phone_number) != std::string::npos)
-//     {
-//       getPhoneNumber.erase(findIndex - 2, phone_number.length() + 4);
-//     } else {
-//       getPhoneNumber.erase(getPhoneNumber.find(phone_number),
-//                            phone_number.length());
-//     }
-//   } else {
-//     std::cout << "No such phone number" << std::endl;
-//     tx.commit();
-//     return;
-//   }
-//   newPhoneNumber = getPhoneNumber;
-//   std::string dropPhoneNumber = "UPDATE " + tx.esc(table) +
-//                                 " SET phone_number = '" +
-//                                 tx.esc(newPhoneNumber) + "' WHERE id = '" +
-//                                 tx.esc(std::to_string(id)) + "'";
-//   tx.exec(dropPhoneNumber);
-//   tx.commit();
-//   std::cout << "Phone number dropped successfully" << std::endl;
-// }
+    for (int i = 0; i < documentsWords_[URL_].size(); ++i) {
+      pqxx::work tx3{*c_};
+      insert = "INSERT INTO words (word) VALUES ('" +
+               tx3.esc(documentsWords_[URL_][i]) + "')";
+      tx3.exec(insert);
+      tx3.commit();
 
-// void SqlDatabase::deleteClient(std::string table, int id) {
-//   pqxx::work tx(*c);
-//   std::string deleteClient = "DELETE FROM " + tx.esc(table) +
-//                              " WHERE id = " + tx.esc(std::to_string(id));
-//   tx.exec(deleteClient);
-//   tx.commit();
-//   std::cout << "Client deleted successfully" << std::endl;
-// }
+      pqxx::work tx4{*c_};
+      pqxx::result wordIdresult = tx4.exec("SELECT MAX(id) FROM words");
+      const std::string wordId = wordIdresult[0][0].as<std::string>();
+      tx4.commit();
 
-// void SqlDatabase::findClient(std::string table, std::string first_name,
-//                              std::string last_name, std::string email,
-//                              std::string phone_number) {
-//   pqxx::work tx(*c);
-//   std::string findClient =
-//       "SELECT * FROM " + tx.esc(table) + " WHERE first_name = '" +
-//       tx.esc(first_name) + "' AND last_name = '" + tx.esc(last_name) +
-//       "' AND email = '" + tx.esc(email) + "' AND phone_number = '" +
-//       tx.esc(phone_number) + "'";
-//   pqxx::result R(tx.exec(findClient));
-//   if (R.empty() == 1) {
-//     std::cout << "Client wasn't found" << std::endl;
-//   } else {
-//     for (const auto &el : R) {
-//       std::cout << "id: " << el.at(0).as<int>() << std::endl;
-//       std::cout << "first_name: " << el.at(1).as<std::string>() << std::endl;
-//       std::cout << "last_name: " << el.at(2).as<std::string>() << std::endl;
-//       std::cout << "email: " << el.at(3).as<std::string>() << std::endl;
-//       std::cout << "phone_number: " << el.at(4).as<std::string>() <<
-//       std::endl;
-//     }
-//   }
-//   tx.commit();
-// }
+      pqxx::work tx5{*c_};
+      insert = "INSERT INTO documents_words VALUES (" + tx5.esc(documentId) +
+               ", " + tx5.esc(wordId) + ", " +
+               tx5.esc(std::to_string(wordsCounts_[documentsWords_[URL_][i]])) +
+               ")";
+      tx5.exec(insert);
+      tx5.commit();
+    }
+
+    findWordsCounts();
+
+    for (int i = 0; i < documentsWords_[URL_].size(); ++i) {
+      pqxx::work tx6{*c_};
+      insert = "UPDATE documents_words SET count = " +
+               tx6.esc(std::to_string(wordsCounts_[documentsWords_[URL_][i]])) +
+               " WHERE (word_id IN (SELECT id FROM words WHERE word = '" +
+               tx6.esc(documentsWords_[URL_][i]) +
+               "')) AND (document_id = (SELECT id FROM documents WHERE "
+               "document = '" +
+               tx6.esc(URL_) + "'))";
+      tx6.exec(insert);
+      tx6.commit();
+    }
+  }
+}

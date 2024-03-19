@@ -5,8 +5,8 @@
 #include <thread>
 #include <vector>
 
+#include "../ini_parser/ini_parser.h"
 #include "indexer/indexer.h"
-#include "ini_parser/ini_parser.h"
 #include "utils/http_utils.h"
 #include <functional>
 
@@ -62,7 +62,7 @@ void parseLink(const httputils::Link &link,
     // TODO: Parse HTML code here on your own (done)
 
     std::cout << "html content:" << std::endl;
-    std::cout << indexer.getHandledHtml() << std::endl;
+    // std::cout << indexer.getHandledHtml() << std::endl;
     // TODO: Collect more links from HTML code and add them to the parser
     // like that:
 

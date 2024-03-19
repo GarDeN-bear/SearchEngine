@@ -5,7 +5,7 @@ Indexer::Indexer(const SqlDataConnection &sqlDataConnection)
 
 void Indexer::setCurrentLink(const httputils::Link &link) {
   linksGetter_.setCurrentLink(link);
-  sqlDatabase_.addURL(linksGetter_.getURL());
+  sqlDatabase_.setURL(linksGetter_.getURL());
 }
 
 void Indexer::setHtml(const std::string html) {
@@ -20,8 +20,9 @@ void Indexer::handleHtml() {
   std::string word;
 
   while (iss >> word) {
-    sqlDatabase_.addWord(word);
+    sqlDatabase_.setWord(word);
   }
+  sqlDatabase_.addIds();
 }
 
 std::vector<httputils::Link> Indexer::getLinks() const {
