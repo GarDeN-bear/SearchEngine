@@ -1,4 +1,5 @@
 #include "indexer.h"
+#include <iostream>
 
 Indexer::Indexer(const SqlDataConnection &sqlDataConnection)
     : sqlDatabase_(sqlDataConnection), htmlParser_(), linksGetter_() {}
@@ -9,8 +10,8 @@ void Indexer::setCurrentLink(const httputils::Link &link) {
 }
 
 void Indexer::setHtml(const std::string html) {
-  htmlParser_.setHtml(html);
   linksGetter_.setHtml(html);
+  htmlParser_.setHtml(html);
   handleHtml();
 }
 
@@ -32,3 +33,5 @@ std::vector<httputils::Link> Indexer::getLinks() const {
 std::string Indexer::getHandledHtml() const {
   return htmlParser_.getHandledHtml();
 }
+
+void Indexer::dropTables() { sqlDatabase_.dropTables(); }

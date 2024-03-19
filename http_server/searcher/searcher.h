@@ -31,7 +31,7 @@ public:
    * @brief Конструктор.
    * @details Создаёт объект соединения pqxx::connection и заполняет данные для
    * подключения к БД PostgreSQL.
-   * @param sqlDataConnection Данные для соединения с SQL базой данных (БД).
+   * @param searcherConnection Данные для соединения с SQL базой данных (БД).
    */
   Searcher(const SearcherConnection &searcherConnection);
 
@@ -55,8 +55,20 @@ public:
   std::vector<std::string> getSearchResult() const;
 
 private:
+  //! Данные для соединения с SQL БД.
+  SearcherConnection searcherConnection_;
+  //! Соединение к БД SQL.
+  std::unique_ptr<pqxx::connection> c_;
   //! Значение для поиска.
   std::string value_;
   //! Результат поиска.
   std::vector<std::string> searchResult_;
+
+  //! Максимальное количество резульатов поиска.
+  const int searchResultCountMax_ = 10;
+
+  /**
+   * @brief Найти результаты поиска.
+   */
+  void findSearchResults();
 };

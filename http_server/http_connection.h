@@ -1,5 +1,6 @@
 #pragma once
 
+#include "searcher/searcher.h"
 #include <boost/asio.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -22,8 +23,10 @@ public:
   /**
    * @brief Конструктор.
    * @param socket TCP-сокет.
+   * @param searcherConnection Данные для подключения к БД.
    */
-  HttpConnection(tcp::socket socket);
+  HttpConnection(tcp::socket socket,
+                 const SearcherConnection &searcherConnection);
 
   /**
    * @brief Запуск HTTP-соединения.
@@ -33,6 +36,8 @@ public:
 private:
   //! Серверный сокет.
   tcp::socket socket_;
+  //! Данные для соединения с SQL БД.
+  SearcherConnection searcherConnection_;
   //! Буффер для чтения данных.
   beast::flat_buffer buffer_{8192};
   //! HTTP-запрос.

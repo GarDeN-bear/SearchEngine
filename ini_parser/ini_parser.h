@@ -7,115 +7,106 @@
 #include <string>
 #include <vector>
 
+/**
+ * @brief ini-парсер.
+ * @details Парсит ini-файлы;
+ */
 class IniParser {
 public:
-  IniParser(std::string);
-  // ������� ������������ ����������� � ������������
+  /**
+   * @brief Конструктор.
+   * @param filename Файл для чтения.
+   */
+  IniParser(const std::string filename);
+
   IniParser(IniParser &other) = delete;
   IniParser(IniParser &&other) = delete;
   IniParser &operator=(IniParser &other) = delete;
   IniParser &operator=(IniParser &&other) = delete;
 
-  // ������� ��������� �������� ������������ ���� �� ������� ������ ����
-  // Sector1.var1
-  template <class T> T getValue(std::string);
+  /**
+   * @brief Получить значение из секции.
+   * @param input_section_value Значение вводимой секции.
+   * @tparam T Тип возвращаемого значения
+   */
+  template <class T> T getValue(const std::string input_section_value);
 
+  /**
+   * @brief Деструктор.
+   * @brief Закрывает файл и удаляет объект.
+   */
   ~IniParser() { fin.close(); }
 
 private:
+  //! Файл для записи.
   std::ifstream fin;
-  std::map<std::string, std::map<std::string, std::string>>
-      sections; // �������, � ������� ������������ ������ � �� ��������� �� INI
-                // �����
-  // ������� ��������� ��������� ������ �������
-  void iniParserError(std::string &, std::string &);
+  //! Секции из ini-файла.
+  std::map<std::string, std::map<std::string, std::string>> sections;
+
+  /**
+   * @brief Ошибочное значение поля секции ini-файла.
+   * @param input_section_name Значение вводимой секции.
+   * @param input_value_name Значение поля секции.
+   */
+  void iniParserError(std::string &input_section_name,
+                      std::string &input_value_name);
+  /**
+   * @brief Ошибочное значение секции ini-файла.
+   * @param input_section_name Значение вводимой секции.
+   * @param sections Cекции ini-файла.
+   */
   void iniParserTypeError(
-      std::string &,
-      std::map<std::string, std::map<std::string, std::string>> &);
+      std::string &input_section_name,
+      std::map<std::string, std::map<std::string, std::string>> &sections);
 };
 
-/*
-�����������, ����������� �������� INI �����.
-� ����������� ���������� ������ ������ � �� ���������� �� ��������� ����� ����
-����������� ������ �����.
-*/
-
-IniParser::IniParser(std::string filename) {
+IniParser::IniParser(const std::string filename) {
   fin.open(filename);
   if (!fin.is_open()) {
-    throw std::runtime_error(
-        "file open failed"); // ��������� ������ ������������� �����
+    throw std::runtime_error("file open failed");
   }
-  std::string section_name; // �������� ������
+  std::string section_name;
   while (!(fin.eof())) {
-    std::string value_name = "empty"; // �������� ���������
-    std::string value = "empty"; // �������� ���������
-    std::string current_string = "empty"; // ������� ������ �����
+    std::string value_name = "empty";
+    std::string value = "empty";
+    std::string current_string = "empty";
     std::getline(fin, current_string);
-    // �������� �� ������, ���� � ����� ����� �������� ���������� ���������
-    // ���������
     if (std::count(current_string.begin(), current_string.end(), ' ') ==
         current_string.size()) {
       continue;
     }
 
-    // �������� ���������� ������, ���� ������� � ������� �����������, �� �
-    // ������ ���������� �������� ������, ������� ������������ � ���������� ���
-    // ���������� ������
     if (current_string.find("[") == 0 &&
         current_string.find("]") != std::string::npos) {
       current_string.resize(current_string.find(']') + 1);
       section_name = current_string.substr(1, current_string.size() - 2);
     } else {
-      // ���� � ������ ������������ �����������, ������������ ����� ���������
       if (current_string.find(";") != std::string::npos &&
           current_string.find(";") != 0 && current_string.at(0) != ' ') {
-        current_string.resize(
-            current_string.find(';')); // �������� ���� ��������
-        value_name = current_string.substr(
-            0, current_string.find('=')); // ����� ������ �� ���������
-                                          // ������������ � �������� ����������
-        value_name.erase(
-            std::remove(value_name.begin(), value_name.end(), ' '),
-            value_name.end()); // � �������� ��������� �� ������ ���� ��������
-        value =
-            current_string.substr(current_string.find('=') + 1,
-                                  current_string.size() - value_name.size() -
-                                      1); // ����� ������ ����� �����
-                                          // ������������ � �������� ���������
-        sections[section_name][value_name] =
-            value; // ���������� ����� ������ � ���������� � � ���������
-                   // ������������ � �������
-      }
-      // ���� � ������ ��� ����������� ����� ���������
-      else if (current_string.find(";") == std::string::npos) {
-        value_name = current_string.substr(
-            0, current_string.find('=')); // ����� ������ �� ���������
-                                          // ������������ � �������� ����������
-        value_name.erase(
-            std::remove(value_name.begin(), value_name.end(), ' '),
-            value_name.end()); // � �������� ��������� �� ������ ���� ��������
-        value =
-            current_string.substr(current_string.find('=') + 1,
-                                  current_string.size() - value_name.size() -
-                                      1); // ����� ������ ����� �����
-                                          // ������������ � �������� ���������
-        // �������� � ������ ����, �� � ���� ��� ��������, �� ����������� �
-        // �������� ������ ������
+        current_string.resize(current_string.find(';'));
+        value_name = current_string.substr(0, current_string.find('='));
+        value_name.erase(std::remove(value_name.begin(), value_name.end(), ' '),
+                         value_name.end());
+        value = current_string.substr(current_string.find('=') + 1,
+                                      current_string.size() -
+                                          value_name.size() - 1);
+        sections[section_name][value_name] = value;
+      } else if (current_string.find(";") == std::string::npos) {
+        value_name = current_string.substr(0, current_string.find('='));
+        value_name.erase(std::remove(value_name.begin(), value_name.end(), ' '),
+                         value_name.end());
+        value = current_string.substr(current_string.find('=') + 1,
+                                      current_string.size() -
+                                          value_name.size() - 1);
         if (value.size() == 0) {
           value = "";
         }
-        sections[section_name][value_name] =
-            value; // ���������� ����� ������ � ���������� � � ���������
-                   // ������������ � �������
-      }
-      // ���� ������ � ������ ���������� � �����������, �� ���������� ��� ������
-      else {
+        sections[section_name][value_name] = value;
+      } else {
         continue;
       }
     }
-    // ����� ���� ������, ��� ������ ����������, �� � ��� ��� ����������,
-    // ����� ������ ����������� �������� ������
+
     if (value_name == "empty") {
       sections[section_name];
     }
@@ -124,11 +115,7 @@ IniParser::IniParser(std::string filename) {
 
 void IniParser::iniParserError(std::string &input_section_name,
                                std::string &input_value_name) {
-  /*
-  ��������� ������ �� ��� ������, ���� ������� �������� ������, �������� ��� �
-  INI �����. � ������ ������������� ������ ��������� ���� ������ � ��������
-  ������, �������������� � INI �����.
-  */
+
   if (sections.count(input_section_name) == 0) {
     std::string section_error =
         "In INI file no input section. Look at sections.\n";
@@ -137,11 +124,7 @@ void IniParser::iniParserError(std::string &input_section_name,
     }
     throw std::runtime_error(section_error);
   } else {
-    /*
-    ��������� ������ �� ��� ������, ���� ������� �������� ����������, ��������
-    ��� � INI �����. � ������ ������������� ������ ��������� ���� ������ �
-    ����������, �������������� � ��������� ������ INI �����.
-    */
+
     if (sections[input_section_name].count(input_value_name) == 0) {
       std::string value_error = "In INI file no input value. Look at [" +
                                 input_section_name + "] content.\n[" +
@@ -166,18 +149,14 @@ void IniParser::iniParserTypeError(
   throw std::runtime_error(type_error);
 }
 
-template <> int IniParser::getValue(std::string input_section_value) {
-  // ��������� �������� ������
+template <> int IniParser::getValue(const std::string input_section_value) {
   std::string input_section_name =
-      input_section_value.substr(0, // �������� ��������� ������
-                                 input_section_value.find('.'));
+      input_section_value.substr(0, input_section_value.find('.'));
   std::string input_value_name = input_section_value.substr(
-      input_section_value.find('.') + 1, // �������� ��������� ����������
+      input_section_value.find('.') + 1,
       input_section_value.size() - input_section_name.size() - 1);
-  int result_value; // �������������� ��������
+  int result_value;
   iniParserError(input_section_name, input_value_name);
-  // ��������� ������ ������������� �������������� �������� �������� ��������� �
-  // ���� int
   try {
     result_value = stoi(sections[input_section_name][input_value_name]);
   } catch (...) {
@@ -187,31 +166,26 @@ template <> int IniParser::getValue(std::string input_section_value) {
 }
 
 template <> std::string IniParser::getValue(std::string input_section_value) {
-  // ��������� �������� ������
   std::string input_section_name =
-      input_section_value.substr(0, // �������� ��������� ������
-                                 input_section_value.find('.'));
+      input_section_value.substr(0, input_section_value.find('.'));
   std::string input_value_name = input_section_value.substr(
-      input_section_value.find('.') + 1, // �������� ��������� ����������
+      input_section_value.find('.') + 1,
       input_section_value.size() - input_section_name.size() - 1);
-  std::string result_value; // �������������� ��������
+  std::string result_value;
   iniParserError(input_section_name, input_value_name);
   result_value = sections[input_section_name][input_value_name];
   return result_value;
 }
 
 template <> double IniParser::getValue(std::string input_section_value) {
-  // ��������� �������� ������
   std::string input_section_name =
-      input_section_value.substr(0, // �������� ��������� ������
-                                 input_section_value.find('.'));
+      input_section_value.substr(0, input_section_value.find('.'));
   std::string input_value_name = input_section_value.substr(
-      input_section_value.find('.') + 1, // �������� ��������� ����������
+      input_section_value.find('.') + 1,
       input_section_value.size() - input_section_name.size() - 1);
-  double result_value; // �������������� ��������
+  double result_value;
   iniParserError(input_section_name, input_value_name);
-  // ��������� ������ ������������� �������������� �������� �������� ��������� �
-  // ���� double
+
   try {
     result_value = stod(sections[input_section_name][input_value_name]);
   } catch (...) {
@@ -221,17 +195,13 @@ template <> double IniParser::getValue(std::string input_section_value) {
 }
 
 template <> float IniParser::getValue(std::string input_section_value) {
-  // ��������� �������� ������
   std::string input_section_name =
-      input_section_value.substr(0, // �������� ��������� ������
-                                 input_section_value.find('.'));
+      input_section_value.substr(0, input_section_value.find('.'));
   std::string input_value_name = input_section_value.substr(
-      input_section_value.find('.') + 1, // �������� ��������� ����������
+      input_section_value.find('.') + 1,
       input_section_value.size() - input_section_name.size() - 1);
-  float result_value; // �������������� ��������
+  float result_value;
   iniParserError(input_section_name, input_value_name);
-  // ��������� ������ ������������� �������������� �������� �������� ��������� �
-  // ���� float
   try {
     result_value = stof(sections[input_section_name][input_value_name]);
   } catch (...) {

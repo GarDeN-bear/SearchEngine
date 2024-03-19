@@ -19,7 +19,6 @@ void LinksGetter::handleHtml() {
     std::string protocol, hostName, path;
     std::string url = match[1].str();
     std::smatch urlMatch;
-    // std::cout << "URL: " << url << std::endl;
 
     if (std::regex_match(url, urlMatch, urlRegex_)) {
       if (urlMatch.size() == 4) {
@@ -48,15 +47,7 @@ void LinksGetter::handleHtml() {
     }
 
     httputils::Link link{setProtocolType(protocol), hostName, path};
-    // std::cout << "ProtocolType: " << protocol << std::endl;
-    // std::cout << "HostName: " << hostName << std::endl;
-    // std::cout << "Path: " << path << std::endl;
-    // std::cout << std::endl;
-    if (links_.size() < 10) {
-      links_.push_back(link);
-    } else {
-      break;
-    }
+    links_.push_back(link);
     searchStart = match.suffix().first;
   }
 }

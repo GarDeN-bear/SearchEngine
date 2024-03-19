@@ -62,6 +62,11 @@ public:
    */
   void addIds();
 
+  /**
+   * @brief Удалить таблицы "documents", "words", "documents_words".
+   */
+  void dropTables();
+
 private:
   //! Данные для соединения с SQL БД.
   SqlDataConnection sqlDataConnection_;

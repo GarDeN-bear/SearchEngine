@@ -1,6 +1,5 @@
 #include "http_connection.h"
 
-#include "searcher/searcher.h"
 #include <codecvt>
 #include <fstream>
 #include <iomanip>
@@ -37,8 +36,9 @@ std::string convert_to_utf8(const std::string &str) { return url_decode(str); }
 
 } // namespace
 
-HttpConnection::HttpConnection(tcp::socket socket)
-    : socket_(std::move(socket)) {}
+HttpConnection::HttpConnection(tcp::socket socket,
+                               const SearcherConnection &searcherConnection)
+    : socket_(std::move(socket)), searcherConnection_(searcherConnection) {}
 
 void HttpConnection::start() {
   readRequest();
@@ -116,9 +116,6 @@ void HttpConnection::createResponsePost() {
 
     std::string key = s.substr(0, pos);
     std::string value = s.substr(pos + 1);
-    Searcher searcher;
-    searhcer.setSearchValue(value);
-    searhcer.getSearchResult(value);
 
     std::string utf8value = convert_to_utf8(value);
 
@@ -129,12 +126,9 @@ void HttpConnection::createResponsePost() {
       return;
     }
 
-    // TODO: Fetch your own search results here
-
-    std::vector<std::string> searchResult = {
-        "https://en.wikipedia.org/wiki/Main_Page",
-        "https://en.wikipedia.org/wiki/Wikipedia",
-    };
+    Searcher searcher(searcherConnection_);
+    searcher.setSearchValue(value);
+    std::vector<std::string> searchResult = searcher.getSearchResult();
 
     response_.set(http::field::content_type, "text/html");
     beast::ostream(response_.body())
@@ -149,6 +143,10 @@ void HttpConnection::createResponsePost() {
 
       beast::ostream(response_.body())
           << "<li><a href=\"" << url << "\">" << url << "</a></li>";
+    }
+
+    if (searchResult.empty()) {
+      beast::ostream(response_.body()) << "Not founded!";
     }
 
     beast::ostream(response_.body()) << "</ul>\n"

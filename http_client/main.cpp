@@ -22,12 +22,12 @@ const std::string DataBaseNameSection = "SQLConnection.DataBaseName";
 const std::string UserSection = "SQLConnection.User";
 const std::string PasswordSection = "SQLConnection.Password";
 
-} // namespace
-
 std::mutex mtx;
 std::condition_variable cv;
 std::queue<std::function<void()>> tasks;
 bool exitThreadPool = false;
+
+} // namespace
 
 void threadPoolWorker() {
   std::unique_lock<std::mutex> lock(mtx);
@@ -59,17 +59,6 @@ void parseLink(const httputils::Link &link,
     Indexer indexer(sqlDataConnection);
     indexer.setCurrentLink(link);
     indexer.setHtml(html);
-    // TODO: Parse HTML code here on your own (done)
-
-    std::cout << "html content:" << std::endl;
-    // std::cout << indexer.getHandledHtml() << std::endl;
-    // TODO: Collect more links from HTML code and add them to the parser
-    // like that:
-
-    // std::vector<httputils::Link> links = {
-    //     {httputils::HTTP, "en.wikipedia.org", "/wiki/Wikipedia"},
-    //     {httputils::HTTPS, "wikimediafoundation.org", "/"},
-    // };
     std::vector<httputils::Link> links = indexer.getLinks();
 
     if (depth > 0) {
@@ -109,6 +98,9 @@ int main() {
     } catch (std::exception &ex) {
       std::cout << ex.what();
     }
+    Indexer indexer(sqlDataConnection);
+    indexer.dropTables();
+
     int numThreads = std::thread::hardware_concurrency();
     std::vector<std::thread> threadPool;
 

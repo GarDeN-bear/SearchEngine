@@ -46,6 +46,11 @@ public:
    */
   std::string getHandledHtml() const;
 
+  /**
+   * @brief Удалить таблицы "documents", "words", "documents_words".
+   */
+  void dropTables();
+
 private:
   //! SQL база данных.
   SqlDatabase sqlDatabase_;
