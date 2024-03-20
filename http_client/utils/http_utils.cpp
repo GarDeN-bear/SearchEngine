@@ -133,4 +133,30 @@ std::string getHtmlContent(const Link &link) {
   return result;
 }
 
+std::string getProtocol(const httputils::ProtocolType &protocolType) {
+  std::string protocol;
+  switch (protocolType) {
+  case httputils::HTTP:
+    protocol = "http";
+    break;
+  default:
+    protocol = "https";
+    break;
+  }
+  return protocol;
+}
+
+httputils::ProtocolType setProtocolType(const std::string protocol) {
+  httputils::ProtocolType protocolType;
+  if (protocol == "http") {
+    protocolType = httputils::HTTP;
+
+  } else if (protocol == "https") {
+    protocolType = httputils::HTTPS;
+
+  } else {
+  }
+  return protocolType;
+}
+
 } // namespace httputils

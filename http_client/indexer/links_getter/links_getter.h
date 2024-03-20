@@ -59,18 +59,4 @@ private:
    * @brief Обработать HTML-страницу.
    */
   void handleHtml();
-
-  /**
-   * @brief Получить протокол HTML-страницы.
-   * @param ptococolType Тип протокола ссылки.
-   * @return Протокол текущей HTML-страницы.
-   */
-  std::string getProtocol(const httputils::ProtocolType &protocolType);
-
-  /**
-   * @brief Установить тип протокола.
-   * @param ptococol Протокол ссылки в виде строки.
-   * @return Протокол ссылки.
-   */
-  httputils::ProtocolType setProtocolType(const std::string protocol);
 };

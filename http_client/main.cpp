@@ -44,6 +44,25 @@ void threadPoolWorker() {
   }
 }
 
+httputils::Link convertUrlToLink(const std::string url) {
+  std::string protocol;
+  std::string hostName;
+  std::string query;
+  std::regex urlRegex(R"((https?)://([^/]+)(/.*)?$)");
+  std::smatch urlMatch;
+
+  if (std::regex_match(url, urlMatch, urlRegex)) {
+    if (urlMatch.size() == 4) {
+      protocol = urlMatch[1].str();
+      hostName = urlMatch[2].str();
+      query = urlMatch[3].str();
+    }
+  }
+
+  httputils::Link link(httputils::setProtocolType(protocol), hostName, query);
+  return link;
+}
+
 void parseLink(const httputils::Link &link,
                const SqlDataConnection &sqlDataConnection, int depth) {
   try {
@@ -82,11 +101,11 @@ int main() {
   try {
     IniParser iniParser(configPath);
     int depth = 1;
-    int startPage = 1;
+    std::string startPage = "https://en.wikipedia.org/wiki/Main_Page";
     SqlDataConnection sqlDataConnection;
     try {
       depth = iniParser.getValue<int>(RecursionDepthSection);
-      startPage = iniParser.getValue<int>(StartPageSection);
+      startPage = iniParser.getValue<std::string>(StartPageSection);
 
       sqlDataConnection.host = iniParser.getValue<std::string>(HostSection);
       sqlDataConnection.port = iniParser.getValue<std::string>(PortSection);
@@ -112,9 +131,7 @@ int main() {
       threadPool.emplace_back(threadPoolWorker);
     }
 
-    httputils::Link link{httputils::ProtocolType::HTTPS, "en.wikipedia.org",
-                         "/wiki/Main_Page"};
-
+    httputils::Link link = convertUrlToLink(startPage);
     {
       std::lock_guard<std::mutex> lock(mtx);
       tasks.push([link, sqlDataConnection, depth]() {

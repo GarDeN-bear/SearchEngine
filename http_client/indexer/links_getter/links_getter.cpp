@@ -46,38 +46,10 @@ void LinksGetter::handleHtml() {
       }
     }
 
-    httputils::Link link{setProtocolType(protocol), hostName, path};
+    httputils::Link link(httputils::setProtocolType(protocol), hostName, path);
     links_.push_back(link);
     searchStart = match.suffix().first;
   }
-}
-
-std::string
-LinksGetter::getProtocol(const httputils::ProtocolType &protocolType) {
-  std::string protocol;
-  switch (protocolType) {
-  case httputils::HTTP:
-    protocol = "http";
-    break;
-  default:
-    protocol = "https";
-    break;
-  }
-  return protocol;
-}
-
-httputils::ProtocolType
-LinksGetter::setProtocolType(const std::string protocol) {
-  httputils::ProtocolType protocolType;
-  if (protocol == "http") {
-    protocolType = httputils::HTTP;
-
-  } else if (protocol == "https") {
-    protocolType = httputils::HTTPS;
-
-  } else {
-  }
-  return protocolType;
 }
 
 std::vector<httputils::Link> LinksGetter::getLinks() const { return links_; }
