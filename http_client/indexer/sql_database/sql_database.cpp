@@ -37,7 +37,7 @@ void SqlDatabase::createTableDocuments() {
   pqxx::work tx{*c_};
   const std::string sqlQueryCrTab = "CREATE TABLE IF NOT EXISTS documents"
                                     " (id SERIAL PRIMARY KEY, "
-                                    "document VARCHAR(200) NOT NULL);";
+                                    "document VARCHAR(200) NOT NULL UNIQUE);";
   tx.exec(sqlQueryCrTab);
   tx.commit();
 }
@@ -46,7 +46,7 @@ void SqlDatabase::createTableWords() {
   pqxx::work tx{*c_};
   const std::string sqlQueryCrTab = "CREATE TABLE IF NOT EXISTS words"
                                     " (id SERIAL PRIMARY KEY, "
-                                    "word VARCHAR(100) NOT NULL);";
+                                    "word VARCHAR(100) NOT NULL UNIQUE);";
   tx.exec(sqlQueryCrTab);
   tx.commit();
 }
@@ -79,52 +79,70 @@ void SqlDatabase::addIds() {
   pqxx::work tx1{*c_};
   std::string insert =
       "SELECT * FROM documents WHERE document = '" + tx1.esc(URL_) + "';";
-  const pqxx::result check = tx1.exec(insert);
+  pqxx::result check = tx1.exec(insert);
   tx1.commit();
   if (check.empty()) {
     pqxx::work tx2{*c_};
-    std::string insert =
+    insert =
         "INSERT INTO documents (document) VALUES ('" + tx2.esc(URL_) + "');";
     tx2.exec(insert);
     tx2.commit();
-  }
 
-  pqxx::work t3{*c_};
-  pqxx::result documentIdresult = t3.exec("SELECT MAX(id) FROM documents;");
-  const std::string documentId = documentIdresult[0][0].as<std::string>();
-  t3.commit();
+    pqxx::work tx3{*c_};
+    pqxx::result documentIdresult = tx3.exec(
+        "SELECT id FROM documents WHERE document = '" + tx3.esc(URL_) + "';");
+    const std::string documentId = documentIdresult[0][0].as<std::string>();
+    tx3.commit();
 
-  for (int i = 0; i < documentsWords_[URL_].size(); ++i) {
-    pqxx::work tx4{*c_};
-    insert = "INSERT INTO words (word) VALUES ('" +
-             tx4.esc(documentsWords_[URL_][i]) + "');";
-    tx4.exec(insert);
-    tx4.commit();
+    for (int i = 0; i < documentsWords_[URL_].size(); ++i) {
+      pqxx::work tx4{*c_};
+      insert = "SELECT * FROM words WHERE word = '" +
+               tx4.esc(documentsWords_[URL_][i]) + "';";
+      check = tx4.exec(insert);
+      tx4.commit();
+      if (check.empty()) {
+        pqxx::work tx5{*c_};
+        insert = "INSERT INTO words (word) VALUES ('" +
+                 tx5.esc(documentsWords_[URL_][i]) + "');";
+        tx5.exec(insert);
+        tx5.commit();
+      }
+      pqxx::work tx6{*c_};
+      pqxx::result wordIdresult =
+          tx6.exec("SELECT id FROM words WHERE word = '" +
+                   tx6.esc(documentsWords_[URL_][i]) + "';");
+      const std::string wordId = wordIdresult[0][0].as<std::string>();
+      tx6.commit();
 
-    pqxx::work tx5{*c_};
-    pqxx::result wordIdresult = tx5.exec("SELECT MAX(id) FROM words;");
-    const std::string wordId = wordIdresult[0][0].as<std::string>();
-    tx5.commit();
+      pqxx::work tx7{*c_};
+      insert = "SELECT * FROM documents_words WHERE document_id = '" +
+               tx7.esc(documentId) + "' AND word_id = '" + tx7.esc(wordId) +
+               "';";
+      check = tx7.exec(insert);
+      tx7.commit();
+      if (check.empty()) {
+        pqxx::work tx8{*c_};
+        insert = "INSERT INTO documents_words VALUES (" + tx8.esc(documentId) +
+                 ", " + tx8.esc(wordId) + ", " + tx8.esc(std::to_string(0)) +
+                 ");";
+        tx8.exec(insert);
+        tx8.commit();
+      }
+    }
 
-    pqxx::work tx6{*c_};
-    insert = "INSERT INTO documents_words VALUES (" + tx6.esc(documentId) +
-             ", " + tx6.esc(wordId) + ", " + tx6.esc(std::to_string(0)) + ");";
-    tx6.exec(insert);
-    tx6.commit();
-  }
-  findWordsCounts();
+    findWordsCounts();
 
-  for (int i = 0; i < documentsWords_[URL_].size(); ++i) {
-    pqxx::work tx{*c_};
-    const std::string insert =
-        "UPDATE documents_words SET count = " +
-        tx.esc(std::to_string(wordsCounts_[documentsWords_[URL_][i]])) +
-        " WHERE (word_id IN (SELECT id FROM words WHERE word = '" +
-        tx.esc(documentsWords_[URL_][i]) +
-        "')) AND (document_id = (SELECT id FROM documents WHERE "
-        "document = '" +
-        tx.esc(URL_) + "'));";
-    tx.exec(insert);
-    tx.commit();
+    for (int i = 0; i < documentsWords_[URL_].size(); ++i) {
+      pqxx::work tx9{*c_};
+      insert = "UPDATE documents_words SET count = " +
+               tx9.esc(std::to_string(wordsCounts_[documentsWords_[URL_][i]])) +
+               " WHERE (word_id IN (SELECT id FROM words WHERE word = '" +
+               tx9.esc(documentsWords_[URL_][i]) +
+               "')) AND (document_id = (SELECT id FROM documents WHERE "
+               "document = '" +
+               tx9.esc(URL_) + "'));";
+      tx9.exec(insert);
+      tx9.commit();
+    }
   }
 }

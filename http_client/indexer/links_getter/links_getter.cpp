@@ -36,7 +36,8 @@ void LinksGetter::handleHtml() {
         }
       }
     } else {
-      url = getProtocol(link_.protocol) + "://" + link_.hostName + url;
+      url = getProtocol(link_.protocol) + "://" + link_.hostName + link_.query +
+            url;
       if (std::regex_match(url, urlMatch, urlRegex_)) {
         if (urlMatch.size() == 4) {
           protocol = urlMatch[1].str();
