@@ -2,7 +2,8 @@
 #include <iostream>
 
 Searcher::Searcher(const SearcherConnection &searcherConnection)
-    : searcherConnection_(searcherConnection), value_(), searchResult_() {
+    : searcherConnection_(searcherConnection), value_(), searchResult_(),
+      isTablesExist_(false) {
   try {
     c_ = std::make_unique<pqxx::connection>(
         "host=" + searcherConnection_.host + " " +
@@ -25,30 +26,48 @@ std::vector<std::string> Searcher::getSearchResult() const {
   return searchResult_;
 }
 
-void Searcher::findSearchResults() {
-  int pos = 0;
-  while ((pos = value_.find("+", pos)) != std::string::npos) {
-    value_.replace(pos, 1, "', '");
-    pos += 1;
-  }
+bool Searcher::isTablesExist() const { return isTablesExist_; }
 
-  pqxx::work tx1{*c_};
-  std::string insert = "SELECT document, COUNT(dw.word_id) FROM documents d "
-                       "JOIN documents_words dw ON d.id = dw.document_id "
-                       "JOIN words w ON dw.word_id = w.id "
-                       "WHERE w.word IN ('" +
-                       value_ +
-                       "') "
-                       "GROUP BY d.id "
-                       "ORDER BY count DESC;";
-  pqxx::result documents = tx1.exec(insert);
-  for (int i = 0; i < documents.size(); ++i) {
-    std::string document = documents[i]["document"].as<std::string>();
-    if (i < searchResultCountMax_) {
-      searchResult_.push_back(document);
-    } else {
-      break;
+void Searcher::findSearchResults() {
+  checkTablesExistance();
+  if (isTablesExist_) {
+    int pos = 0;
+    while ((pos = value_.find("+", pos)) != std::string::npos) {
+      value_.replace(pos, 1, "', '");
+      pos += 1;
     }
+
+    pqxx::work tx{*c_};
+    std::string insert = "SELECT document, COUNT(dw.word_id) FROM documents d "
+                         "JOIN documents_words dw ON d.id = dw.document_id "
+                         "JOIN words w ON dw.word_id = w.id "
+                         "WHERE w.word IN ('" +
+                         value_ +
+                         "') "
+                         "GROUP BY d.id "
+                         "ORDER BY count DESC;";
+    pqxx::result documents = tx.exec(insert);
+    for (int i = 0; i < documents.size(); ++i) {
+      std::string document = documents[i]["document"].as<std::string>();
+      if (i < searchResultCountMax_) {
+        searchResult_.push_back(document);
+      } else {
+        break;
+      }
+    }
+    tx.commit();
   }
-  tx1.commit();
+}
+
+void Searcher::checkTablesExistance() {
+  pqxx::work tx{*c_};
+  std::string insert =
+      "SELECT EXISTS ("
+      "SELECT 1 "
+      "FROM information_schema.tables "
+      "WHERE table_schema = 'public' "
+      "AND table_name IN ('documents', 'documents_words', 'words')"
+      ");";
+  pqxx::result tablesExist = tx.exec(insert);
+  isTablesExist_ = tablesExist[0][0].as<bool>();
 }

@@ -57,6 +57,8 @@ httputils::Link convertUrlToLink(const std::string url) {
       hostName = urlMatch[2].str();
       query = urlMatch[3].str();
     }
+  } else {
+    throw "Wrong URL! Need URL format: http(s)://hostname/query";
   }
 
   httputils::Link link(httputils::setProtocolType(protocol), hostName, query);
@@ -131,15 +133,19 @@ int main() {
       threadPool.emplace_back(threadPoolWorker);
     }
 
-    httputils::Link link = convertUrlToLink(startPage);
-    {
-      std::lock_guard<std::mutex> lock(mtx);
-      tasks.push([link, sqlDataConnection, depth]() {
-        parseLink(link, sqlDataConnection, depth);
-      });
-      cv.notify_one();
-    }
+    try {
+      httputils::Link link = convertUrlToLink(startPage);
 
+      {
+        std::lock_guard<std::mutex> lock(mtx);
+        tasks.push([link, sqlDataConnection, depth]() {
+          parseLink(link, sqlDataConnection, depth);
+        });
+        cv.notify_one();
+      }
+    } catch (char const *e) {
+      std::cerr << e << std::endl;
+    }
     std::this_thread::sleep_for(std::chrono::seconds(2));
 
     {

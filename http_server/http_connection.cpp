@@ -139,14 +139,16 @@ void HttpConnection::createResponsePost() {
         << "<p>Response:<p>\n"
         << "<ul>\n";
 
+    if (!searcher.isTablesExist()) {
+      beast::ostream(response_.body()) << "Data base is empty!";
+    } else if (searchResult.empty()) {
+      beast::ostream(response_.body()) << "Not founded!";
+    }
+
     for (const auto &url : searchResult) {
 
       beast::ostream(response_.body())
           << "<li><a href=\"" << url << "\">" << url << "</a></li>";
-    }
-
-    if (searchResult.empty()) {
-      beast::ostream(response_.body()) << "Not founded!";
     }
 
     beast::ostream(response_.body()) << "</ul>\n"

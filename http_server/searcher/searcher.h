@@ -54,6 +54,12 @@ public:
    */
   std::vector<std::string> getSearchResult() const;
 
+  /**
+   * @brief Проверить существование таблиц.
+   * @return true - существуют, false - не существуют.
+   */
+  bool isTablesExist() const;
+
 private:
   //! Данные для соединения с SQL БД.
   SearcherConnection searcherConnection_;
@@ -63,6 +69,8 @@ private:
   std::string value_;
   //! Результат поиска.
   std::vector<std::string> searchResult_;
+  //! Существуют ли таблицы в БД.
+  bool isTablesExist_;
 
   //! Максимальное количество резульатов поиска.
   const int searchResultCountMax_ = 10;
@@ -71,4 +79,9 @@ private:
    * @brief Найти результаты поиска.
    */
   void findSearchResults();
+
+  /**
+   * @brief Проверить существование таблиц.
+   */
+  void checkTablesExistance();
 };
