@@ -26,15 +26,6 @@ void LinksGetter::handleHtml() {
         hostName = urlMatch[2].str();
         path = urlMatch[3].str();
       }
-    } else if (url.substr(0, 2) == "//") {
-      url = getProtocol(link_.protocol) + ":" + url;
-      if (std::regex_match(url, urlMatch, urlRegex_)) {
-        if (urlMatch.size() == 4) {
-          protocol = urlMatch[1].str();
-          hostName = urlMatch[2].str();
-          path = urlMatch[3].str();
-        }
-      }
     } else {
       url = getProtocol(link_.protocol) + "://" + link_.hostName + link_.query +
             url;
@@ -45,6 +36,9 @@ void LinksGetter::handleHtml() {
           path = urlMatch[3].str();
         }
       }
+    }
+    if (path.empty()) {
+      path = "/";
     }
 
     httputils::Link link(httputils::setProtocolType(protocol), hostName, path);
